@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { FaceLandmarkOverlay } from '../FaceLandmarkOverlay'
 
 export function LiveCall({ onExit }) {
   const videoRef = useRef(null)
@@ -7,6 +8,7 @@ export function LiveCall({ onExit }) {
   const [micEnabled, setMicEnabled] = useState(true)
   const [status, setStatus] = useState('Conectando cámara y micrófono…')
   const [error, setError] = useState(null)
+  const [face, setFace] = useState({ detected: false, count: 0, expressions: {} })
 
   useEffect(() => {
     let cancelled = false
@@ -82,6 +84,7 @@ export function LiveCall({ onExit }) {
           </article>
           <article className="call-tile call-you">
             <video ref={videoRef} autoPlay muted playsInline />
+            <FaceLandmarkOverlay videoRef={videoRef} onDetection={setFace} />
             <span className="tile-name">Tú</span>
             <span className="camera-state">{cameraEnabled ? 'Cámara activa' : 'Cámara apagada'}</span>
           </article>
@@ -91,9 +94,25 @@ export function LiveCall({ onExit }) {
           <p className="analysis-kicker">ANÁLISIS EN TIEMPO REAL</p>
           <h1>Tu presencia en cámara</h1>
           <p className="analysis-muted">Las expresiones y landmarks aparecerán aquí durante la entrevista.</p>
-          <div className="analysis-placeholder">
+          <div className={`analysis-placeholder ${face.detected ? 'detected' : ''}`}>
             <span className="analysis-pulse" />
-            Esperando detección facial…
+            {face.detected ? `Landmarks detectados: ${face.count}` : 'Esperando detección facial…'}
+          </div>
+          <div className="expression-list" aria-label="Expresiones detectadas">
+            {[
+              ['Sonrisa', face.expressions.smile],
+              ['Cejas', face.expressions.brow],
+              ['Parpadeo', face.expressions.blink],
+              ['Boca', face.expressions.jaw],
+            ].map(([label, value]) => {
+              const percentage = Math.round((value ?? 0) * 100)
+              return (
+                <div className="expression-row" key={label}>
+                  <div><span>{label}</span><strong>{percentage}%</strong></div>
+                  <span className="expression-track"><span style={{ width: `${percentage}%` }} /></span>
+                </div>
+              )
+            })}
           </div>
         </aside>
       </section>
