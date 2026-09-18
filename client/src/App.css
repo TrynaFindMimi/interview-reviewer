@@ -1,0 +1,105 @@
+.app {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #f5f5f5;
+  color: #1f1f1f;
+}
+
+.app header {
+  text-align: center;
+}
+
+.app h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.app p {
+  margin: 8px 0 0;
+  color: #555;
+}
+
+.uploader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(420px, 100%);
+}
+
+.file-field {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px;
+  border: 2px dashed #888;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.file-field input {
+  max-width: 100%;
+}
+
+.uploader button {
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #1677ff;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.uploader button:disabled {
+  background: #91caff;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #cf1322;
+}
+
+.results {
+  width: min(480px, 100%);
+  padding: 20px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.metric strong {
+  font-size: 1.5rem;
+}
+
+.metric span {
+  color: #555;
+}
+
+.presence {
+  margin-top: 16px;
+  color: #1f1f1f;
+}
