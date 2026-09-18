@@ -45,3 +45,10 @@ tox.ini
 # Large temp files
 *.tmp
 *.bak
+
+# Node / Frontend
+node_modules/
+client/node_modules/
+client/dist/
+client/*.local
+npm-debug.log*
