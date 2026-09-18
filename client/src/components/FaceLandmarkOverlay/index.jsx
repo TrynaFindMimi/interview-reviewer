@@ -36,18 +36,12 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
           runningMode: 'VIDEO',
           numFaces: 1,
         }
-        let landmarker
-        try {
-          landmarker = await FaceLandmarker.createFromOptions(fileset, {
-            ...options,
-            baseOptions: { modelAssetPath: MODEL_URL, delegate: 'GPU' },
-          })
-        } catch {
-          landmarker = await FaceLandmarker.createFromOptions(fileset, {
-            ...options,
-            baseOptions: { modelAssetPath: MODEL_URL, delegate: 'CPU' },
-          })
-        }
+        // Older integrated GPUs can crash inside the WebGL delegate. CPU is
+        // more stable here and detection is already throttled below.
+        const landmarker = await FaceLandmarker.createFromOptions(fileset, {
+          ...options,
+          baseOptions: { modelAssetPath: MODEL_URL, delegate: 'CPU' },
+        })
         if (cancelled) {
           landmarker.close()
           return
@@ -94,7 +88,14 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
           canvas.height = video.videoHeight
         }
 
-        const result = landmarker.detectForVideo(video, now)
+        let result
+        try {
+          result = landmarker.detectForVideo(video, now)
+        } catch (error) {
+          setStatus(`Error de detección: ${error.message}`)
+          if (!stopped) timerRef.current = setTimeout(detectFrame, DETECTION_INTERVAL)
+          return
+        }
         const landmarks = result.faceLandmarks?.[0] ?? []
         const context = canvas.getContext('2d')
         context.clearRect(0, 0, canvas.width, canvas.height)
