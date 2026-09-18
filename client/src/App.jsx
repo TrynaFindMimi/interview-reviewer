@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import './App.css'
+import { WebcamRecorder } from './components/WebcamRecorder'
 
 const API_URL = import.meta.env.VITE_API_URL ?? '/api'
+
+const MODES = [
+  { key: 'record', label: 'Grabar cámara' },
+  { key: 'upload', label: 'Subir video' },
+]
 
 const METRICS = [
   { key: 'smiles', label: 'Sonrisas' },
@@ -11,13 +17,13 @@ const METRICS = [
 ]
 
 function App() {
+  const [mode, setMode] = useState('record')
   const [file, setFile] = useState(null)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(event) {
-    event.preventDefault()
+  async function handleSubmit() {
     if (!file) return
     const form = new FormData()
     form.append('video', file)
@@ -41,26 +47,60 @@ function App() {
     }
   }
 
+  function switchMode(key) {
+    setMode(key)
+    setFile(null)
+    setResult(null)
+    setError(null)
+  }
+
   return (
     <main className="app">
       <header>
         <h1>Interview Reviewer</h1>
-        <p>Analiza los gestos faciales de una entrevista detectados por MediaPipe</p>
+        <p>Analiza los gestos faciales de una entrevista por Zoom detectados por MediaPipe</p>
       </header>
 
-      <form className="uploader" onSubmit={handleSubmit}>
-        <label className="file-field">
-          <span>{file ? file.name : 'Selecciona un video…'}</span>
-          <input
-            type="file"
-            accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
-            onChange={(event) => setFile(event.target.files[0])}
-          />
-        </label>
-        <button type="submit" disabled={loading || !file}>
-          {loading ? 'Analizando…' : 'Analizar video'}
-        </button>
-      </form>
+      <div className="segmented" role="tablist">
+        {MODES.map(({ key, label }) => (
+          <button
+            type="button"
+            key={key}
+            className={mode === key ? 'active' : ''}
+            onClick={() => switchMode(key)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {mode === 'record' ? (
+        <WebcamRecorder onRecorded={setFile} />
+      ) : (
+        <div className="uploader">
+          <label className="file-field">
+            <span>{file ? file.name : 'Selecciona un video…'}</span>
+            <input
+              type="file"
+              accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
+              onChange={(event) => setFile(event.target.files[0])}
+            />
+          </label>
+        </div>
+      )}
+
+      {file && mode === 'record' && (
+        <p className="recorded-file">Video listo: <strong>{file.name}</strong></p>
+      )}
+
+      <button
+        type="button"
+        className="analyze"
+        onClick={handleSubmit}
+        disabled={loading || !file}
+      >
+        {loading ? 'Analizando…' : 'Analizar video'}
+      </button>
 
       {error && <p className="error">{error}</p>}
 
