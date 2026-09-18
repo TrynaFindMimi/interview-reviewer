@@ -909,3 +909,109 @@
     font-size: 0.75rem;
   }
 }
+
+/* El video del candidato es el escenario principal; el entrevistador queda en picture-in-picture. */
+.call-page {
+  height: 100svh;
+  overflow: hidden;
+}
+
+.call-topbar,
+.call-controls {
+  flex-shrink: 0;
+}
+
+.call-content {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: calc(100svh - 134px);
+  min-height: 0;
+  padding: 18px;
+  overflow: hidden;
+}
+
+.call-grid {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.call-you {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 6px;
+}
+
+.call-interviewer {
+  position: absolute;
+  top: 36px;
+  right: 36px;
+  z-index: 4;
+  width: clamp(170px, 22vw, 300px);
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  border-color: #617180;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+
+.call-interviewer .interviewer-avatar {
+  width: clamp(46px, 6vw, 78px);
+  height: clamp(46px, 6vw, 78px);
+  font-size: clamp(1rem, 2vw, 1.5rem);
+}
+
+.call-analysis {
+  position: absolute;
+  left: 36px;
+  bottom: 36px;
+  z-index: 4;
+  width: min(280px, calc(100% - 72px));
+  min-height: 0;
+  padding: 16px;
+  border-color: rgba(112, 132, 148, 0.55);
+  background: rgba(24, 35, 45, 0.92);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.call-analysis h1 {
+  font-size: 1.1rem;
+}
+
+.analysis-muted {
+  margin: 7px 0;
+  font-size: 0.78rem;
+}
+
+.expression-list {
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.call-error {
+  position: absolute;
+  left: 50%;
+  bottom: 92px;
+  z-index: 6;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 620px) {
+  .call-content {
+    height: calc(100svh - 170px);
+    padding: 10px;
+  }
+
+  .call-interviewer {
+    top: 22px;
+    right: 22px;
+    width: 150px;
+  }
+
+  .call-analysis {
+    left: 22px;
+    bottom: 22px;
+    width: 230px;
+  }
+}

@@ -10,6 +10,20 @@ export function LiveCall({ onExit }) {
   const [error, setError] = useState(null)
   const [face, setFace] = useState({ detected: false, count: 0, expressions: {} })
 
+  const expressionOptions = [
+    ['smile', 'Sonriendo'],
+    ['brow', 'Atento'],
+    ['blink', 'Parpadeando'],
+    ['jaw', 'Hablando'],
+  ]
+  const currentExpression = expressionOptions.reduce(
+    (current, [key, label]) => {
+      const score = face.expressions[key] ?? 0
+      return score > current.score ? { label, score } : current
+    },
+    { label: 'Neutral', score: 0 },
+  )
+
   useEffect(() => {
     let cancelled = false
 
@@ -91,12 +105,14 @@ export function LiveCall({ onExit }) {
         </div>
 
         <aside className="call-analysis">
-          <p className="analysis-kicker">ANÁLISIS EN TIEMPO REAL</p>
-          <h1>Tu presencia en cámara</h1>
-          <p className="analysis-muted">Las expresiones y landmarks aparecerán aquí durante la entrevista.</p>
+          <p className="analysis-kicker">EXPRESIÓN EN TIEMPO REAL</p>
+          <h1>{face.detected ? currentExpression.label : 'Buscando tu rostro…'}</h1>
+          <p className="analysis-muted">
+            {face.detected ? 'Así te está percibiendo la cámara.' : 'Colócate frente a la cámara para comenzar.'}
+          </p>
           <div className={`analysis-placeholder ${face.detected ? 'detected' : ''}`}>
             <span className="analysis-pulse" />
-            {face.detected ? `Landmarks detectados: ${face.count}` : 'Esperando detección facial…'}
+            {face.detected ? `${Math.round(currentExpression.score * 100)}% de intensidad` : 'Esperando detección facial…'}
           </div>
           <div className="expression-list" aria-label="Expresiones detectadas">
             {[
