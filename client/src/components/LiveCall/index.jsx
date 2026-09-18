@@ -16,7 +16,7 @@ export function LiveCall({ onExit }) {
   const [micEnabled, setMicEnabled] = useState(true)
   const [status, setStatus] = useState('Conectando cámara y micrófono…')
   const [error, setError] = useState(null)
-  const [face, setFace] = useState({ detected: false, count: 0, expressions: {} })
+  const [face, setFace] = useState({ detected: false, expressions: {}, gaze: { focused: false, deviation: 0 } })
 
   const expressionOptions = [
     ['smile', 'Sonriendo'],
@@ -120,9 +120,13 @@ export function LiveCall({ onExit }) {
           <p className="analysis-muted">
             {face.detected ? 'Así te está percibiendo la cámara.' : 'Colócate frente a la cámara para comenzar.'}
           </p>
+          <div className={`gaze-reading ${face.gaze.focused ? 'focused' : ''}`}>
+            <span className="gaze-indicator" />
+            <span>{face.detected ? (face.gaze.focused ? 'Mirada atenta' : 'Mirada desviada') : 'Esperando mirada'}</span>
+          </div>
           <div className={`analysis-placeholder ${face.detected ? 'detected' : ''}`}>
             <span className="analysis-pulse" />
-            {face.detected ? `${Math.round(currentExpression.score * 100)}% de intensidad` : 'Esperando detección facial…'}
+            {face.detected ? `Desvío visual: ${Math.round(face.gaze.deviation * 100)}%` : 'Esperando detección facial…'}
           </div>
           <div className="expression-list" aria-label="Expresiones detectadas">
             {[

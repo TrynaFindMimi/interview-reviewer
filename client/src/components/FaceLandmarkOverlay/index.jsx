@@ -13,7 +13,6 @@ function blendshapeValue(categories, names) {
 }
 
 export function FaceLandmarkOverlay({ videoRef, onDetection }) {
-  const canvasRef = useRef(null)
   const landmarkerRef = useRef(null)
   const timerRef = useRef(null)
   const lastVideoTimeRef = useRef(-1)
@@ -68,13 +67,11 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
 
     function detectFrame() {
       const video = videoRef.current
-      const canvas = canvasRef.current
       const landmarker = landmarkerRef.current
       const now = performance.now()
 
       if (
         video &&
-        canvas &&
         landmarker &&
         video.readyState >= 2 &&
         video.videoWidth &&
@@ -83,11 +80,6 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
       ) {
         lastDetectionAt = now
         lastVideoTimeRef.current = video.currentTime
-        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-          canvas.width = video.videoWidth
-          canvas.height = video.videoHeight
-        }
-
         let result
         try {
           result = landmarker.detectForVideo(video, now)
@@ -97,32 +89,24 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
           return
         }
         const landmarks = result.faceLandmarks?.[0] ?? []
-        const context = canvas.getContext('2d')
-        context.clearRect(0, 0, canvas.width, canvas.height)
-        context.fillStyle = '#2d8cff'
-
-        for (const point of landmarks) {
-          context.beginPath()
-          context.arc(point.x * canvas.width, point.y * canvas.height, 1.8, 0, Math.PI * 2)
-          context.fill()
-        }
-
         const categories = result.faceBlendshapes?.[0]?.categories ?? []
         const expressions = {
           smile: blendshapeValue(categories, ['mouthSmileLeft', 'mouthSmileRight']),
-          brow: blendshapeValue(categories, ['browInnerUp', 'browOuterUpLeft', 'browOuterUpRight']),
-          blink: blendshapeValue(categories, ['eyeBlinkLeft', 'eyeBlinkRight']),
-          jaw: blendshapeValue(categories, ['jawOpen']),
-        }
+            brow: blendshapeValue(categories, ['browInnerUp', 'browOuterUpLeft', 'browOuterUpRight']),
+            blink: blendshapeValue(categories, ['eyeBlinkLeft', 'eyeBlinkRight']),
+            jaw: blendshapeValue(categories, ['jawOpen']),
+          }
+        const gaze = estimateGaze(landmarks)
         const notificationKey = `${landmarks.length}:${Object.values(expressions)
           .map((value) => Math.round(value * 20))
-          .join(',')}`
+          .join(',')}:${Math.round(gaze.deviation * 20)}`
         if (notificationKey !== lastNotificationRef.current) {
           lastNotificationRef.current = notificationKey
           onDetectionRef.current({
           detected: landmarks.length > 0,
-          count: landmarks.length,
+            count: landmarks.length,
             expressions,
+            gaze,
           })
         }
       }
@@ -138,9 +122,31 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
   }, [videoRef])
 
   return (
-    <>
-      <canvas ref={canvasRef} className="landmark-canvas" aria-label="Landmarks faciales" />
-      <span className="landmark-status">{status}</span>
-    </>
+    <span className="landmark-status">{status}</span>
   )
+}
+
+function estimateGaze(landmarks) {
+  if (landmarks.length < 478) return { deviation: 0, focused: false }
+
+  const leftIris = averagePoint(landmarks, [468, 469, 470, 471, 472])
+  const rightIris = averagePoint(landmarks, [473, 474, 475, 476, 477])
+  const leftRatio = horizontalRatio(leftIris, landmarks[33], landmarks[133])
+  const rightRatio = horizontalRatio(rightIris, landmarks[362], landmarks[263])
+  const deviation = Math.min(1, (Math.abs(leftRatio - 0.5) + Math.abs(rightRatio - 0.5)) / 0.5)
+
+  return { deviation, focused: deviation < 0.42 }
+}
+
+function averagePoint(landmarks, indices) {
+  return indices.reduce(
+    (point, index) => ({ x: point.x + landmarks[index].x / indices.length, y: point.y + landmarks[index].y / indices.length }),
+    { x: 0, y: 0 },
+  )
+}
+
+function horizontalRatio(iris, firstCorner, secondCorner) {
+  const min = Math.min(firstCorner.x, secondCorner.x)
+  const width = Math.abs(firstCorner.x - secondCorner.x)
+  return width ? (iris.x - min) / width : 0.5
 }

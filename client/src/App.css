@@ -781,6 +781,30 @@
   color: #8be0a5;
 }
 
+.gaze-reading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: #ffb4b4;
+  font-size: 0.8rem;
+}
+
+.gaze-reading.focused {
+  color: #8be0a5;
+}
+
+.gaze-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e05b5b;
+}
+
+.gaze-reading.focused .gaze-indicator {
+  background: #41c36b;
+}
+
 .expression-list {
   display: grid;
   gap: 12px;
