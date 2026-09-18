@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+*.dist-info/
+
+# uv
+.venv/
+.python-version.bak
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing / CI
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+tox.ini
+
+# Environment / Secrets
+.env
+.env.local
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Large temp files
+*.tmp
+*.bak

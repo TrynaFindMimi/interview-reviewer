@@ -1,0 +1,37 @@
+[project]
+name = "interview-reviewer"
+version = "0.1.0"
+description = "Interview Reviewer - análisis de entrevistas con detección de gestos faciales usando MediaPipe"
+readme = "README.md"
+authors = [
+    { name = "Nahomi Humerez", email = "nahomihumerez1@upb.edu" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "mediapipe>=1.0.1",
+    "opencv-python>=5.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.12.0",
+    "pytest>=8.0.0",
+]
+
+[project.scripts]
+interview-reviewer = "interview_reviewer:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[build-system]
+requires = ["uv_build>=0.12.16,<0.13.0"]
+build-backend = "uv_build"
