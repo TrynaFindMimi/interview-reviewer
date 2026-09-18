@@ -1130,6 +1130,130 @@
   }
 }
 
+/* Landing de práctica: más cercana a un juego que a un dashboard corporativo. */
+.landing-page {
+  position: relative;
+  isolation: isolate;
+  background: #f4f3ff;
+  color: #152238;
+}
+
+.landing-page::before,
+.landing-page::after {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  content: '';
+  pointer-events: none;
+}
+
+.landing-page::before {
+  width: 260px;
+  height: 260px;
+  top: 14%;
+  right: 8%;
+  background: #ffda4a;
+  opacity: 0.75;
+  filter: blur(2px);
+}
+
+.landing-page::after {
+  width: 180px;
+  height: 180px;
+  bottom: -50px;
+  left: 4%;
+  background: #ff7a59;
+  opacity: 0.7;
+}
+
+.landing-nav strong {
+  padding: 9px 13px;
+  border-radius: 12px 12px 12px 3px;
+  background: #2d8cff;
+  color: #fff;
+  box-shadow: 4px 4px 0 #172a46;
+}
+
+.landing-hero .eyebrow {
+  color: #ff5c35;
+  letter-spacing: 0.08em;
+}
+
+.landing-hero h1 {
+  color: #172a46;
+  font-weight: 800;
+  letter-spacing: -0.075em;
+}
+
+.hero-copy {
+  color: #506078;
+}
+
+.hero-cta {
+  padding: 15px 24px;
+  border-radius: 13px 13px 13px 4px;
+  background: #ff5c35;
+  box-shadow: 5px 5px 0 #172a46;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.hero-cta:hover {
+  background: #ff704d;
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 #172a46;
+}
+
+.landing-note {
+  color: #647189;
+}
+
+.landing-preview {
+  border: 3px solid #172a46;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 10px 10px 0 #172a46;
+  transform: rotate(-2deg);
+}
+
+.preview-top {
+  background: #fff7cf;
+  border-bottom-color: #172a46;
+}
+
+.preview-top span:nth-child(1) { background: #ff5c35; }
+.preview-top span:nth-child(2) { background: #ffda4a; }
+.preview-top span:nth-child(3) { background: #41c36b; }
+
+.preview-screen {
+  background: radial-gradient(circle at 50% 38%, #ffda4a, #ff9e68 64%, #ff704d);
+}
+
+.preview-avatar {
+  background: #2d8cff;
+  box-shadow: 5px 5px 0 #172a46;
+}
+
+.preview-self {
+  border: 3px solid #fff;
+  background: linear-gradient(145deg, #7bc3ff, #2d8cff);
+}
+
+.preview-bar {
+  background: #172a46;
+}
+
+@media (max-width: 820px) {
+  .landing-page::before {
+    top: 28%;
+    right: -80px;
+  }
+
+  .landing-page::after {
+    bottom: -40px;
+    left: -50px;
+  }
+}
+
 /* El video del candidato es el escenario principal; el entrevistador queda en picture-in-picture. */
 .call-page {
   height: 100svh;

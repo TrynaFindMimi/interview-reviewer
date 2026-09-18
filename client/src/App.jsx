@@ -76,7 +76,12 @@ function Connecting({ navigate }) {
 }
 
 function Interview({ navigate, stream }) {
-  return <LiveCall initialStream={stream} onExit={() => navigate('/')} />
+  function exitCall() {
+    stream?.getTracks().forEach((track) => track.stop())
+    navigate('/')
+  }
+
+  return <LiveCall initialStream={stream} onExit={exitCall} />
 }
 
 function App() {

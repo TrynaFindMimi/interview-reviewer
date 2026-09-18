@@ -34,6 +34,7 @@ export function LiveCall({ onExit, initialStream }) {
 
   useEffect(() => {
     let cancelled = false
+    const ownsStream = !initialStream
 
     async function connect() {
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -53,7 +54,9 @@ export function LiveCall({ onExit, initialStream }) {
         }
         streamRef.current = stream
         videoRef.current.srcObject = stream
-        await videoRef.current.play()
+        await videoRef.current.play().catch((reason) => {
+          if (reason.name !== 'AbortError') throw reason
+        })
         setStatus('Llamada conectada')
       } catch (reason) {
         setStatus('No se pudo conectar')
@@ -68,7 +71,10 @@ export function LiveCall({ onExit, initialStream }) {
     connect()
     return () => {
       cancelled = true
-      streamRef.current?.getTracks().forEach((track) => track.stop())
+      if (ownsStream) {
+        const stream = streamRef.current
+        stream?.getTracks().forEach((track) => track.stop())
+      }
       streamRef.current = null
     }
   }, [initialStream])
