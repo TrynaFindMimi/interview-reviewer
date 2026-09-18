@@ -1,4 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import {
+  AudioMutedOutlined,
+  AudioOutlined,
+  CloseOutlined,
+  PhoneOutlined,
+  VideoCameraAddOutlined,
+  VideoCameraOutlined,
+} from '@ant-design/icons'
 import { FaceLandmarkOverlay } from '../FaceLandmarkOverlay'
 
 export function LiveCall({ onExit }) {
@@ -86,7 +94,9 @@ export function LiveCall({ onExit }) {
       <header className="call-topbar">
         <div className="call-brand"><span className="call-live-dot" /> Interview Reviewer</div>
         <div className="call-status">{status}</div>
-        <button type="button" className="call-leave" onClick={onExit}>Salir</button>
+        <button type="button" className="call-leave" onClick={onExit} aria-label="Salir de la llamada" title="Salir">
+          <CloseOutlined />
+        </button>
       </header>
 
       <section className="call-content">
@@ -136,13 +146,33 @@ export function LiveCall({ onExit }) {
       {error && <p className="call-error" role="alert">{error}</p>}
 
       <footer className="call-controls">
-        <button type="button" className={!micEnabled ? 'control muted' : 'control'} onClick={toggleMic}>
-          {micEnabled ? 'Micrófono' : 'Micrófono apagado'}
+        <button
+          type="button"
+          className={!micEnabled ? 'control muted' : 'control'}
+          onClick={toggleMic}
+          aria-label={micEnabled ? 'Apagar micrófono' : 'Activar micrófono'}
+          title={micEnabled ? 'Apagar micrófono' : 'Activar micrófono'}
+        >
+          {micEnabled ? <AudioOutlined /> : <AudioMutedOutlined />}
         </button>
-        <button type="button" className={!cameraEnabled ? 'control muted' : 'control'} onClick={toggleCamera}>
-          {cameraEnabled ? 'Cámara' : 'Cámara apagada'}
+        <button
+          type="button"
+          className={!cameraEnabled ? 'control muted' : 'control'}
+          onClick={toggleCamera}
+          aria-label={cameraEnabled ? 'Apagar cámara' : 'Activar cámara'}
+          title={cameraEnabled ? 'Apagar cámara' : 'Activar cámara'}
+        >
+          {cameraEnabled ? <VideoCameraOutlined /> : <VideoCameraAddOutlined />}
         </button>
-        <button type="button" className="control end" onClick={onExit}>Finalizar llamada</button>
+        <button
+          type="button"
+          className="control end"
+          onClick={onExit}
+          aria-label="Finalizar llamada"
+          title="Finalizar llamada"
+        >
+          <PhoneOutlined />
+        </button>
       </footer>
     </main>
   )

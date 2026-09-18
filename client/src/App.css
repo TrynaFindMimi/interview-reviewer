@@ -609,7 +609,11 @@
 }
 
 .call-leave {
-  padding: 7px 14px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
   border: 1px solid #4a5965;
   border-radius: 5px;
   background: transparent;
@@ -847,8 +851,11 @@
 }
 
 .control {
-  min-width: 112px;
-  padding: 11px 14px;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  padding: 0;
   border: 1px solid #455461;
   border-radius: 5px;
   background: #25323d;
@@ -856,6 +863,10 @@
   font: inherit;
   font-size: 0.82rem;
   cursor: pointer;
+}
+
+.control svg {
+  font-size: 20px;
 }
 
 .control:hover {
@@ -904,9 +915,9 @@
   }
 
   .control {
-    min-width: 0;
-    flex: 1;
-    font-size: 0.75rem;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
   }
 }
 

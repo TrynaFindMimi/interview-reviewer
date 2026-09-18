@@ -100,23 +100,10 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
         const context = canvas.getContext('2d')
         context.clearRect(0, 0, canvas.width, canvas.height)
         context.fillStyle = '#2d8cff'
-        context.strokeStyle = 'rgba(45, 140, 255, 0.72)'
-        context.lineWidth = 1
-
-        const connections = FaceLandmarker.FACE_LANDMARKS_TESSELATION ?? []
-        for (const connection of connections) {
-          const start = landmarks[connection.start]
-          const end = landmarks[connection.end]
-          if (!start || !end) continue
-          context.beginPath()
-          context.moveTo(start.x * canvas.width, start.y * canvas.height)
-          context.lineTo(end.x * canvas.width, end.y * canvas.height)
-          context.stroke()
-        }
 
         for (const point of landmarks) {
           context.beginPath()
-          context.arc(point.x * canvas.width, point.y * canvas.height, 1.25, 0, Math.PI * 2)
+          context.arc(point.x * canvas.width, point.y * canvas.height, 1.8, 0, Math.PI * 2)
           context.fill()
         }
 
