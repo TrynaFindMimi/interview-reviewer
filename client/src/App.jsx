@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import { WebcamRecorder } from './components/WebcamRecorder'
 
@@ -16,7 +16,82 @@ const METRICS = [
   { key: 'jaw_opens', label: 'Boca abierta' },
 ]
 
-function App() {
+function Landing({ navigate }) {
+  return (
+    <main className="landing-page">
+      <nav className="landing-nav">
+        <strong>Interview Reviewer</strong>
+        <button type="button" className="nav-login" onClick={() => navigate('/login')}>
+          Iniciar sesión
+        </button>
+      </nav>
+      <section className="landing-hero">
+        <p className="eyebrow">SIMULADOR DE ENTREVISTAS TÉCNICAS</p>
+        <h1>Practica la entrevista que realmente quieres conseguir.</h1>
+        <p className="hero-copy">
+          Simula una llamada de entrevista adaptada a tu CV y al puesto que buscas: sistemas,
+          QA, soporte o desarrollo. Mejora tus respuestas y tu comunicación frente a cámara.
+        </p>
+        <button type="button" className="hero-cta" onClick={() => navigate('/login')}>
+          Iniciar entrevista
+        </button>
+      </section>
+      <section className="landing-cards" aria-label="Cómo funciona">
+        <article>
+          <span>01</span>
+          <h2>Sube tu contexto</h2>
+          <p>Usa tu CV para preparar una entrevista alineada con tu experiencia.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h2>Simula la llamada</h2>
+          <p>Activa cámara y micrófono y practica en una experiencia parecida a una videollamada.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h2>Entiende tu presencia</h2>
+          <p>Observa tus expresiones y landmarks faciales mientras respondes.</p>
+        </article>
+      </section>
+    </main>
+  )
+}
+
+function Login({ navigate }) {
+  const [email, setEmail] = useState('')
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    navigate('/interview')
+  }
+
+  return (
+    <main className="auth-page">
+      <button type="button" className="back-link" onClick={() => navigate('/')}>
+        ← Volver al inicio
+      </button>
+      <section className="auth-card">
+        <p className="eyebrow">ENTREVISTA PERSONALIZADA</p>
+        <h1>Prepara tu simulacro</h1>
+        <p>Ingresa tu correo para continuar. La configuración de CV y puesto estará disponible en el siguiente paso.</p>
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="email">Correo electrónico</label>
+          <input
+            id="email"
+            type="email"
+            required
+            placeholder="tu@correo.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+          <button type="submit" className="hero-cta">Continuar</button>
+        </form>
+      </section>
+    </main>
+  )
+}
+
+function Interview({ navigate }) {
   const [mode, setMode] = useState('record')
   const [file, setFile] = useState(null)
   const [result, setResult] = useState(null)
@@ -56,6 +131,9 @@ function App() {
 
   return (
     <main className="app">
+      <button type="button" className="back-link interview-back" onClick={() => navigate('/')}>
+        ← Salir al inicio
+      </button>
       <header>
         <h1>Interview Reviewer</h1>
         <p>Analiza los gestos faciales de una entrevista por Zoom detectados por MediaPipe</p>
@@ -124,6 +202,27 @@ function App() {
       )}
     </main>
   )
+}
+
+function App() {
+  const [path, setPath] = useState(window.location.pathname)
+
+  useEffect(() => {
+    function handlePopState() {
+      setPath(window.location.pathname)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  function navigate(nextPath) {
+    window.history.pushState({}, '', nextPath)
+    setPath(nextPath)
+  }
+
+  if (path === '/login') return <Login navigate={navigate} />
+  if (path === '/interview') return <Interview navigate={navigate} />
+  return <Landing navigate={navigate} />
 }
 
 export default App
