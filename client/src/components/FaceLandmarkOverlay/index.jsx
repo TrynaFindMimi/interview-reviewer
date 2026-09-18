@@ -4,6 +4,7 @@ import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
 const WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm'
 const MODEL_URL =
   'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task'
+const DETECTION_INTERVAL = 1000 / 12
 
 function blendshapeValue(categories, names) {
   return Math.max(
@@ -14,7 +15,9 @@ function blendshapeValue(categories, names) {
 export function FaceLandmarkOverlay({ videoRef, onDetection }) {
   const canvasRef = useRef(null)
   const landmarkerRef = useRef(null)
-  const animationRef = useRef(null)
+  const timerRef = useRef(null)
+  const lastVideoTimeRef = useRef(-1)
+  const lastNotificationRef = useRef('')
   const onDetectionRef = useRef(onDetection)
   const [status, setStatus] = useState('Cargando detector facial…')
 
@@ -28,12 +31,23 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
     async function startDetector() {
       try {
         const fileset = await FilesetResolver.forVisionTasks(WASM_URL)
-        const landmarker = await FaceLandmarker.createFromOptions(fileset, {
-          baseOptions: { modelAssetPath: MODEL_URL, delegate: 'GPU' },
+        const options = {
           outputFaceBlendshapes: true,
           runningMode: 'VIDEO',
           numFaces: 1,
-        })
+        }
+        let landmarker
+        try {
+          landmarker = await FaceLandmarker.createFromOptions(fileset, {
+            ...options,
+            baseOptions: { modelAssetPath: MODEL_URL, delegate: 'GPU' },
+          })
+        } catch {
+          landmarker = await FaceLandmarker.createFromOptions(fileset, {
+            ...options,
+            baseOptions: { modelAssetPath: MODEL_URL, delegate: 'CPU' },
+          })
+        }
         if (cancelled) {
           landmarker.close()
           return
@@ -48,25 +62,39 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
     startDetector()
     return () => {
       cancelled = true
-      if (animationRef.current) cancelAnimationFrame(animationRef.current)
+      if (timerRef.current) clearTimeout(timerRef.current)
       landmarkerRef.current?.close()
       landmarkerRef.current = null
     }
   }, [])
 
   useEffect(() => {
-    function drawFrame() {
+    let stopped = false
+    let lastDetectionAt = 0
+
+    function detectFrame() {
       const video = videoRef.current
       const canvas = canvasRef.current
       const landmarker = landmarkerRef.current
+      const now = performance.now()
 
-      if (video && canvas && landmarker && video.readyState >= 2 && video.videoWidth) {
+      if (
+        video &&
+        canvas &&
+        landmarker &&
+        video.readyState >= 2 &&
+        video.videoWidth &&
+        now - lastDetectionAt >= DETECTION_INTERVAL &&
+        video.currentTime !== lastVideoTimeRef.current
+      ) {
+        lastDetectionAt = now
+        lastVideoTimeRef.current = video.currentTime
         if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
           canvas.width = video.videoWidth
           canvas.height = video.videoHeight
         }
 
-        const result = landmarker.detectForVideo(video, performance.now())
+        const result = landmarker.detectForVideo(video, now)
         const landmarks = result.faceLandmarks?.[0] ?? []
         const context = canvas.getContext('2d')
         context.clearRect(0, 0, canvas.width, canvas.height)
@@ -92,23 +120,33 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
         }
 
         const categories = result.faceBlendshapes?.[0]?.categories ?? []
-        onDetectionRef.current({
+        const expressions = {
+          smile: blendshapeValue(categories, ['mouthSmileLeft', 'mouthSmileRight']),
+          brow: blendshapeValue(categories, ['browInnerUp', 'browOuterUpLeft', 'browOuterUpRight']),
+          blink: blendshapeValue(categories, ['eyeBlinkLeft', 'eyeBlinkRight']),
+          jaw: blendshapeValue(categories, ['jawOpen']),
+        }
+        const notificationKey = `${landmarks.length}:${Object.values(expressions)
+          .map((value) => Math.round(value * 20))
+          .join(',')}`
+        if (notificationKey !== lastNotificationRef.current) {
+          lastNotificationRef.current = notificationKey
+          onDetectionRef.current({
           detected: landmarks.length > 0,
           count: landmarks.length,
-          expressions: {
-            smile: blendshapeValue(categories, ['mouthSmileLeft', 'mouthSmileRight']),
-            brow: blendshapeValue(categories, ['browInnerUp', 'browOuterUpLeft', 'browOuterUpRight']),
-            blink: blendshapeValue(categories, ['eyeBlinkLeft', 'eyeBlinkRight']),
-            jaw: blendshapeValue(categories, ['jawOpen']),
-          },
-        })
+            expressions,
+          })
+        }
       }
 
-      animationRef.current = requestAnimationFrame(drawFrame)
+      if (!stopped) timerRef.current = setTimeout(detectFrame, DETECTION_INTERVAL)
     }
 
-    animationRef.current = requestAnimationFrame(drawFrame)
-    return () => cancelAnimationFrame(animationRef.current)
+    timerRef.current = setTimeout(detectFrame, DETECTION_INTERVAL)
+    return () => {
+      stopped = true
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
   }, [videoRef])
 
   return (
