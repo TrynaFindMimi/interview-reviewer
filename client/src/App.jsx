@@ -2,40 +2,54 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import { LiveCall } from './components/LiveCall'
 
-function Landing({ navigate }) {
+function Landing({ onStart }) {
+  const [requesting, setRequesting] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleStart() {
+    setRequesting(true)
+    setError(null)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30, max: 30 } },
+        audio: true,
+      })
+      onStart(stream)
+    } catch (reason) {
+      setError(
+        reason.name === 'NotAllowedError'
+          ? 'Necesitamos permiso de cámara y micrófono para iniciar la simulación.'
+          : `No se pudo acceder a tus dispositivos: ${reason.message}`,
+      )
+    } finally {
+      setRequesting(false)
+    }
+  }
+
   return (
     <main className="landing-page">
       <nav className="landing-nav">
         <strong>Interview Reviewer</strong>
       </nav>
       <section className="landing-hero">
-        <p className="eyebrow">SIMULADOR DE ENTREVISTAS TÉCNICAS</p>
-        <h1>Practica la entrevista que realmente quieres conseguir.</h1>
+        <p className="eyebrow">ENTREVISTA REVIEWER / BETA</p>
+        <h1>Tu próxima entrevista, en modo práctica.</h1>
         <p className="hero-copy">
-          Simula una llamada de entrevista adaptada a tu CV y al puesto que buscas: sistemas,
-          QA, soporte o desarrollo. Mejora tus respuestas y tu comunicación frente a cámara.
+          Una sala de entrevista simulada para puestos de sistemas, QA y soporte. Practica frente
+          a cámara y recibe señales claras sobre tu expresión y mirada.
         </p>
-        <button type="button" className="hero-cta" onClick={() => navigate('/interview')}>
-          Iniciar entrevista
+        <button type="button" className="hero-cta" onClick={handleStart} disabled={requesting}>
+          {requesting ? 'Solicitando permisos…' : 'Iniciar entrevista'}
         </button>
+        {error && <p className="landing-error" role="alert">{error}</p>}
+        <div className="landing-note"><span /> Cámara y micrófono solo durante la simulación</div>
       </section>
-      <section className="landing-cards" aria-label="Cómo funciona">
-        <article>
-          <span>01</span>
-          <h2>Sube tu contexto</h2>
-          <p>Usa tu CV para preparar una entrevista alineada con tu experiencia.</p>
-        </article>
-        <article>
-          <span>02</span>
-          <h2>Simula la llamada</h2>
-          <p>Activa cámara y micrófono y practica en una experiencia parecida a una videollamada.</p>
-        </article>
-        <article>
-          <span>03</span>
-          <h2>Entiende tu presencia</h2>
-          <p>Observa tus expresiones y landmarks faciales mientras respondes.</p>
-        </article>
-      </section>
+      <div className="landing-preview" aria-hidden="true">
+        <div className="preview-top"><span /><span /><span /><b>Interview room</b></div>
+        <div className="preview-screen"><span className="preview-avatar">IR</span><small>Entrevistador IA</small></div>
+        <div className="preview-self"><span>Tu cámara</span></div>
+        <div className="preview-bar"><i /><i /><i /><em /></div>
+      </div>
     </main>
   )
 }
@@ -61,12 +75,13 @@ function Connecting({ navigate }) {
   )
 }
 
-function Interview({ navigate }) {
-  return <LiveCall onExit={() => navigate('/')} />
+function Interview({ navigate, stream }) {
+  return <LiveCall initialStream={stream} onExit={() => navigate('/')} />
 }
 
 function App() {
   const [path, setPath] = useState(window.location.pathname)
+  const [preflightStream, setPreflightStream] = useState(null)
 
   useEffect(() => {
     function handlePopState() {
@@ -82,8 +97,8 @@ function App() {
   }
 
   if (path === '/interview') return <Connecting navigate={() => navigate('/interview/live')} />
-  if (path === '/interview/live') return <Interview navigate={navigate} />
-  return <Landing navigate={navigate} />
+  if (path === '/interview/live') return <Interview navigate={navigate} stream={preflightStream} />
+  return <Landing onStart={(stream) => { setPreflightStream(stream); navigate('/interview') }} />
 }
 
 export default App

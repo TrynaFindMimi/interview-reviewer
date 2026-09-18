@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons'
 import { FaceLandmarkOverlay } from '../FaceLandmarkOverlay'
 
-export function LiveCall({ onExit }) {
+export function LiveCall({ onExit, initialStream }) {
   const videoRef = useRef(null)
   const streamRef = useRef(null)
   const [cameraEnabled, setCameraEnabled] = useState(true)
@@ -43,8 +43,8 @@ export function LiveCall({ onExit }) {
       }
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+        const stream = initialStream ?? await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user', frameRate: { ideal: 30, max: 30 } },
           audio: true,
         })
         if (cancelled) {
@@ -71,7 +71,7 @@ export function LiveCall({ onExit }) {
       streamRef.current?.getTracks().forEach((track) => track.stop())
       streamRef.current = null
     }
-  }, [])
+  }, [initialStream])
 
   function toggleCamera() {
     const next = !cameraEnabled

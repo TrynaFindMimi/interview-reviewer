@@ -4,7 +4,8 @@ import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
 const WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm'
 const MODEL_URL =
   'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task'
-const DETECTION_INTERVAL = 1000 / 12
+const DETECTION_INTERVAL = 1000 / 30
+const GAZE_COOLDOWN = 1000
 
 function blendshapeValue(categories, names) {
   return Math.max(
@@ -17,6 +18,7 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
   const timerRef = useRef(null)
   const lastVideoTimeRef = useRef(-1)
   const lastNotificationRef = useRef('')
+  const gazeStateRef = useRef({ focused: true, candidate: true, candidateSince: 0 })
   const onDetectionRef = useRef(onDetection)
   const [status, setStatus] = useState('Cargando detector facial…')
 
@@ -96,7 +98,7 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
             blink: blendshapeValue(categories, ['eyeBlinkLeft', 'eyeBlinkRight']),
             jaw: blendshapeValue(categories, ['jawOpen']),
           }
-        const gaze = estimateGaze(landmarks)
+        const gaze = stabilizeGaze(estimateGaze(landmarks), now, gazeStateRef.current)
         const notificationKey = `${landmarks.length}:${Object.values(expressions)
           .map((value) => Math.round(value * 20))
           .join(',')}:${Math.round(gaze.deviation * 20)}`
@@ -127,7 +129,7 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
 }
 
 function estimateGaze(landmarks) {
-  if (landmarks.length < 478) return { deviation: 0, focused: false }
+  if (landmarks.length < 478) return { deviation: 1, focused: false }
 
   const leftIris = averagePoint(landmarks, [468, 469, 470, 471, 472])
   const rightIris = averagePoint(landmarks, [473, 474, 475, 476, 477])
@@ -136,6 +138,19 @@ function estimateGaze(landmarks) {
   const deviation = Math.min(1, (Math.abs(leftRatio - 0.5) + Math.abs(rightRatio - 0.5)) / 0.5)
 
   return { deviation, focused: deviation < 0.42 }
+}
+
+function stabilizeGaze(gaze, now, state) {
+  if (gaze.focused !== state.candidate) {
+    state.candidate = gaze.focused
+    state.candidateSince = now
+  }
+
+  if (state.focused !== state.candidate && now - state.candidateSince >= GAZE_COOLDOWN) {
+    state.focused = state.candidate
+  }
+
+  return { ...gaze, focused: state.focused }
 }
 
 function averagePoint(landmarks, indices) {
