@@ -31,6 +31,13 @@ export function LiveCall({ onExit, initialStream }) {
     },
     { label: 'Neutral', score: 0 },
   )
+  const attentionLabel = !face.detected
+    ? 'Esperando mirada'
+    : face.gaze.reason === 'one_eye_hidden'
+      ? 'Desatento: ojo no visible'
+      : face.gaze.focused
+        ? 'Mirada atenta'
+        : 'Desatento: mirada desviada'
 
   useEffect(() => {
     let cancelled = false
@@ -128,7 +135,7 @@ export function LiveCall({ onExit, initialStream }) {
           </p>
           <div className={`gaze-reading ${face.gaze.focused ? 'focused' : ''}`}>
             <span className="gaze-indicator" />
-            <span>{face.detected ? (face.gaze.focused ? 'Mirada atenta' : 'Mirada desviada') : 'Esperando mirada'}</span>
+            <span>{attentionLabel}</span>
           </div>
           <div className={`analysis-placeholder ${face.detected ? 'detected' : ''}`}>
             <span className="analysis-pulse" />

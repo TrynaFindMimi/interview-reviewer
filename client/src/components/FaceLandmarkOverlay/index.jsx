@@ -98,7 +98,7 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
             blink: blendshapeValue(categories, ['eyeBlinkLeft', 'eyeBlinkRight']),
             jaw: blendshapeValue(categories, ['jawOpen']),
           }
-        const gaze = stabilizeGaze(estimateGaze(landmarks), now, gazeStateRef.current)
+        const gaze = stabilizeGaze(estimateGaze(landmarks, categories), now, gazeStateRef.current)
         const notificationKey = `${landmarks.length}:${Object.values(expressions)
           .map((value) => Math.round(value * 20))
           .join(',')}:${Math.round(gaze.deviation * 20)}`
@@ -128,29 +128,55 @@ export function FaceLandmarkOverlay({ videoRef, onDetection }) {
   )
 }
 
-function estimateGaze(landmarks) {
-  if (landmarks.length < 478) return { deviation: 1, focused: false }
+function estimateGaze(landmarks, categories) {
+  if (landmarks.length < 478) return { deviation: 1, focused: false, reason: 'face_lost' }
 
   const leftIris = averagePoint(landmarks, [468, 469, 470, 471, 472])
   const rightIris = averagePoint(landmarks, [473, 474, 475, 476, 477])
   const leftRatio = horizontalRatio(leftIris, landmarks[33], landmarks[133])
   const rightRatio = horizontalRatio(rightIris, landmarks[362], landmarks[263])
   const deviation = Math.min(1, (Math.abs(leftRatio - 0.5) + Math.abs(rightRatio - 0.5)) / 0.5)
+  const leftBlink = categoryScore(categories, 'eyeBlinkLeft')
+  const rightBlink = categoryScore(categories, 'eyeBlinkRight')
+  const oneEyeHidden =
+    !irisVisible(landmarks, [468, 469, 470, 471, 472]) !==
+      !irisVisible(landmarks, [473, 474, 475, 476, 477]) ||
+    (leftBlink > 0.65 && rightBlink < 0.35) ||
+    (rightBlink > 0.65 && leftBlink < 0.35)
 
-  return { deviation, focused: deviation < 0.42 }
+  return {
+    deviation,
+    focused: deviation < 0.42 && !oneEyeHidden,
+    reason: oneEyeHidden ? 'one_eye_hidden' : deviation < 0.42 ? 'focused' : 'gaze_away',
+  }
 }
 
 function stabilizeGaze(gaze, now, state) {
   if (gaze.focused !== state.candidate) {
     state.candidate = gaze.focused
     state.candidateSince = now
+    state.candidateReason = gaze.reason
+  } else {
+    state.candidateReason = gaze.reason
   }
 
   if (state.focused !== state.candidate && now - state.candidateSince >= GAZE_COOLDOWN) {
     state.focused = state.candidate
+    state.reason = state.candidateReason
   }
 
-  return { ...gaze, focused: state.focused }
+  return { ...gaze, focused: state.focused, reason: state.reason ?? gaze.reason }
+}
+
+function categoryScore(categories, name) {
+  return categories.find((category) => category.categoryName === name)?.score ?? 0
+}
+
+function irisVisible(landmarks, indices) {
+  return indices.every((index) => {
+    const point = landmarks[index]
+    return point && point.x > 0.01 && point.x < 0.99 && point.y > 0.01 && point.y < 0.99
+  })
 }
 
 function averagePoint(landmarks, indices) {
